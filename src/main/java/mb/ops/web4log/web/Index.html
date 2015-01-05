@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:wicket="http://wicket.apache.org">
+<head>
+	<meta charset="utf-8"/>
+	<link rel="stylesheet" type="text/css" href="css/style.css"/>
+	<link rel="stylesheet" type="text/css" href="css/font-awesome.min.css"/>
+</head>
+<body>
+<table class="header">
+	<tr>
+		<td style="width:14px;"><a wicket:id="reloadAppList"><i class="fa fa-refresh"></i></a></td>
+		<td style="width:100px;">Applications:</td>
+		<td>
+			<table>
+				<tr wicket:id="appListContainer">
+					<td wicket:id="appList">
+						<a wicket:id="appLink">
+							<span wicket:id="appLinkLabel"></span>
+						</a>
+						<span class="selectedApp" wicket:id="selectedApp"></span>
+					</td>
+				</tr>
+			</table>
+		</td>
+		<td class="titleCell"><a href="https://github.com/mbizhani/web4log" target="_blank">Web4Log <i
+				class="fa fa-github"></i></a></td>
+	</tr>
+</table>
+
+<div class="container">
+	<div wicket:id="tailPanel"></div>
+</div>
+</body>
+</html>

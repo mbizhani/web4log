@@ -1,0 +1,53 @@
+<wicket:head>
+	<script>
+		function scroll(taId, lines, maxLines, append) {
+			var ta = $('#' + taId);
+
+			if (append) {
+				if ($('#limitedTA').is(':checked')) {
+					var total = (ta.val() + lines).split("\n");
+					if (total.length > maxLines) {
+						total = total.slice(total.length - maxLines);
+					}
+					ta.val(total.join("\n"));
+				} else {
+					ta.val(ta.val() + lines);
+				}
+			} else {
+				ta.val(lines);
+			}
+
+			if ($('#autoScroll').is(':checked')) {
+				if (ta.length) {
+					ta.scrollTop(ta[0].scrollHeight - ta.height());
+				}
+			}
+		}
+	</script>
+</wicket:head>
+
+<wicket:panel>
+	<form wicket:id="form">
+		<table cellspacing="0" cellpadding="0">
+			<tr>
+				<td><input type="text" wicket:id="filter" size="50"/></td>
+				<td><input type="submit" wicket:id="search" value="Filter"/></td>
+				<td><input type="button" wicket:id="reset" value="Reset"/></td>
+			</tr>
+		</table>
+	</form>
+	<textarea readonly wicket:id="logArea"></textarea>
+	<table cellspacing="0" cellpadding="0">
+		<tr>
+			<td>
+				<input type="button" wicket:id="reload" value="Reload"/>
+			</td>
+			<td>&nbsp;&nbsp;</td>
+			<td><label for="autoScroll">AutoScroll:</label></td>
+			<td><input id="autoScroll" type="checkbox" checked/></td>
+			<td>&nbsp;&nbsp;</td>
+			<td><label for="limitedTA">Limited:</label></td>
+			<td><input id="limitedTA" type="checkbox"/></td>
+		</tr>
+	</table>
+</wicket:panel>

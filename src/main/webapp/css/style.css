@@ -1,0 +1,55 @@
+* {
+	font-family: Verdana, Tahoma, Arial, sans-serif;
+	font-size: 14px;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+}
+
+textarea {
+	height: 500px;
+	width: 100%;
+}
+
+.header {
+	width: 100%;
+	height: 40px;
+	background-color: #205081;
+	color: white;
+}
+
+.header span {
+	vertical-align: middle;
+}
+
+.header a {
+	color: white;
+}
+
+.header a:hover {
+	color: yellow;
+}
+
+.header .selectedApp {
+	color: yellow;
+	font-size: 15px;
+	font-weight: bold;
+}
+
+.titleCell {
+	width: 100px;
+	text-align: right;
+	font-size: 18px !important;
+	font-weight: bold;
+	font-style: italic;
+}
+
+.titleCell a {
+	text-decoration: none;
+}
+
+.container {
+	padding: 10px;
+}
