@@ -9,7 +9,7 @@ body {
 }
 
 textarea {
-	height: 500px;
+	height: 600px;
 	width: 100%;
 }
 
@@ -39,7 +39,7 @@ textarea {
 }
 
 .titleCell {
-	width: 100px;
+	width: 120px;
 	text-align: right;
 	font-size: 18px !important;
 	font-weight: bold;
