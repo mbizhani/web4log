@@ -16,6 +16,7 @@ import org.apache.wicket.util.time.Duration;
 
 public class TailRemoteLogPanel extends Panel {
 	private static final int VIEW_MAX_LINES = ConfigService.getInt("log.view.max.lines");
+	private static final int REFRESH_PERIOD = ConfigService.getInt("log.refresh.period");
 
 	private String remoteApp, logMessageFilter;
 	private long lastLine = 0;
@@ -67,7 +68,7 @@ public class TailRemoteLogPanel extends Panel {
 		logArea.setOutputMarkupId(true);
 		add(logArea);
 
-		add(new AbstractAjaxTimerBehavior(Duration.ONE_SECOND) {
+		add(new AbstractAjaxTimerBehavior(Duration.milliseconds(REFRESH_PERIOD)) {
 			@Override
 			protected void onTimer(AjaxRequestTarget target) {
 				LogContent logContent = LogCacheService.getLogContent(remoteApp, lastLine, "\\n", logMessageFilter);
