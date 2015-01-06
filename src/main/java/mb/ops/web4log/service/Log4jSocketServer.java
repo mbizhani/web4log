@@ -79,7 +79,7 @@ public class Log4jSocketServer {
 						application = app.toString();
 						logger.info("Application Connected: {}", application);
 					}
-					LogCacheService.put(application, le);
+					LogCacheService.addLog(application, le);
 				}
 			} catch (Exception e) {
 				logger.error("ClientHandler", e);
