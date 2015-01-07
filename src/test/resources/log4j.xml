@@ -6,23 +6,34 @@
 
 	<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
 		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="[%p] (%-9t %d) %m%n"/>
+			<param name="ConversionPattern" value="[%p] (%-9t %d) %m%n" />
 		</layout>
 	</appender>
 
-	<appender name="REMOTE" class="org.apache.log4j.net.SocketAppender">
-		<param name="remoteHost" value="localhost"/>
-		<param name="port" value="9999"/>
-		<param name="application" value="test"/>
+	<appender name="RemoteTest" class="org.apache.log4j.net.SocketAppender">
+		<param name="remoteHost" value="localhost" />
+		<param name="port" value="9999" />
+		<param name="application" value="test" />
+	</appender>
+
+	<appender name="RemoteW4L" class="org.apache.log4j.net.SocketAppender">
+		<param name="remoteHost" value="localhost" />
+		<param name="port" value="9999" />
+		<param name="application" value="W4F" />
 	</appender>
 
 	<logger name="REMOTE" additivity="false">
-		<level value="INFO"/>
-		<appender-ref ref="REMOTE"/>
+		<level value="INFO" />
+		<appender-ref ref="RemoteTest" />
+	</logger>
+
+	<logger name="mb.ops" additivity="false">
+		<level value="INFO" />
+		<appender-ref ref="RemoteW4L" />
 	</logger>
 
 	<root>
-		<level value="ERROR"/>
-		<appender-ref ref="CONSOLE"/>
+		<level value="ERROR" />
+		<appender-ref ref="CONSOLE" />
 	</root>
 </log4j:configuration>

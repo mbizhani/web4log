@@ -21,10 +21,8 @@ public class Log4jSocketServer {
 			int port = ConfigService.getInt("network.binding.port");
 			if (bindingAddress == null) {
 				serverSocket = new ServerSocket(port);
-				logger.info("Start Log4jSocketServer: port = {}", port);
 			} else {
 				serverSocket = new ServerSocket(port, 50, InetAddress.getByName(bindingAddress));
-				logger.info("Start Log4jSocketServer: address = {}, port = {}", bindingAddress, port);
 			}
 
 			new Thread() {
@@ -40,6 +38,8 @@ public class Log4jSocketServer {
 					}
 				}
 			}.start();
+
+			logger.info("Start Log4jSocketServer: address = {}, port = {}", bindingAddress, port);
 		} catch (IOException e) {
 			logger.error("Log4jServer.start:", e);
 		}
@@ -64,7 +64,7 @@ public class Log4jSocketServer {
 
 		@Override
 		public void run() {
-			logger.info("ClientHandler Start: {}", socket.getInetAddress());
+			logger.info("ClientHandler Start: client={}", socket.getInetAddress());
 
 			try {
 				ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());

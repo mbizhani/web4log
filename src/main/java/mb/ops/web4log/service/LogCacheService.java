@@ -26,6 +26,10 @@ public class LogCacheService {
 		return APP_MAP.get(app).getContentMap();
 	}
 
+	public static boolean isAppRegistered(String app) {
+		return APP_MAP.containsKey(app);
+	}
+
 	public static List<String> getAppList() {
 		return new ArrayList<String>(APP_MAP.keySet());
 	}

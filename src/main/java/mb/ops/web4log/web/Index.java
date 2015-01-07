@@ -10,18 +10,23 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Index extends WebPage {
-	private String remoteApp;
 	private List<String> apps = new ArrayList<String>();
 
 	private WebMarkupContainer appListContainer;
-	private TailRemoteLogPanel tailPanel;
 
-	public Index() {
+	public Index(PageParameters parameters) {
+		this(parameters.get("app").toOptionalString());
+	}
+
+	public Index(String app) {
+		final String theApp = LogCacheService.isAppRegistered(app) ? app : null;
+
 		add(new AjaxLink("reloadAppList") {
 			@Override
 			public void onClick(AjaxRequestTarget target) {
@@ -39,32 +44,28 @@ public class Index extends WebPage {
 		appListContainer.add(new ListView<String>("appList", apps) {
 			@Override
 			protected void populateItem(final ListItem<String> item) {
-				final String theApp = item.getModelObject();
-				Label selectedApp = new Label("selectedApp", theApp);
+				final String selectedApp = item.getModelObject();
+				Label selectedAppLbl = new Label("selectedApp", selectedApp);
 				Link<String> appLink = new Link<String>("appLink") {
 					@Override
 					public void onClick() {
-						remoteApp = theApp;
-						tailPanel
-								.setRemoteApp(theApp)
-								.setVisible(true);
+						setResponsePage(new Index(selectedApp));
 					}
 				};
-				appLink.add(new Label("appLinkLabel", theApp));
+				appLink.add(new Label("appLinkLabel", selectedApp));
 
-				selectedApp.setVisible(theApp.equals(remoteApp));
-				appLink.setVisible(!selectedApp.isVisible());
+				selectedAppLbl.setVisible(selectedApp.equals(theApp));
+				appLink.setVisible(!selectedAppLbl.isVisible());
 
-				item.add(selectedApp);
+				item.add(selectedAppLbl);
 				item.add(appLink);
 			}
 		});
 
-		tailPanel = new TailRemoteLogPanel("tailPanel");
-		tailPanel
-				.setVisible(false)
-				.setOutputMarkupId(true)
-				.setOutputMarkupPlaceholderTag(true);
-		add(tailPanel);
+		add(
+			new TailRemoteLogPanel("tailPanel")
+				.setRemoteApp(theApp)
+				.setVisible(theApp != null)
+		);
 	}
 }
