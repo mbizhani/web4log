@@ -2,60 +2,37 @@ package mb.ops.web4log.service;
 
 import org.apache.log4j.*;
 import org.apache.log4j.spi.LoggingEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class LogCacheService {
-	private static final Logger logger = LoggerFactory.getLogger(LogCacheService.class);
-
-	private static final int CACHE_MAX_LINES = ConfigService.getInt("log.cache.max.lines");
 	private static final Layout LOG_LAYOUT = new PatternLayout(ConfigService.getString("log.layout"));
-	private static final Map<String, Map<Long, LoggingEvent>> APP_CONTENT_MAP = new LinkedHashMap<String, Map<Long, LoggingEvent>>();
-	private static final Map<String, org.apache.log4j.Logger> APP_APPENDER_MAP = new HashMap<String, org.apache.log4j.Logger>();
+
+	private static final Map<String, AppProfile> APP_MAP = new LinkedHashMap<String, AppProfile>();
 
 	public static synchronized void addLog(String app, LoggingEvent event) {
-		if (!APP_CONTENT_MAP.containsKey(app)) {
-			APP_CONTENT_MAP.put(app, new MaxSizeMap<Long, LoggingEvent>(CACHE_MAX_LINES));
+		if (!APP_MAP.containsKey(app)) {
+			APP_MAP.put(app, new AppProfile(app, createLoggerForApp(app)));
 		}
 
-		if (!APP_APPENDER_MAP.containsKey(app)) {
-			try {
-				DailyRollingFileAppender appender = new DailyRollingFileAppender(new PatternLayout("%m"),
-					String.format("logs/web4log/%s.log", app), ".yyyy-MM-dd");
-				appender.setThreshold(Level.ALL);
-				appender.setName("APP_" + app);
-				appender.setAppend(true);
-				appender.activateOptions();
-
-				org.apache.log4j.Logger logger = LogManager.getLogger("APP_" + app);
-				logger.addAppender(appender);
-				logger.setAdditivity(false);
-
-				APP_APPENDER_MAP.put(app, logger);
-			} catch (IOException e) {
-				logger.error("Create Appender: ", e);
-			}
-
-		}
-
-		APP_CONTENT_MAP.get(app).put(event.getTimeStamp(), event);
-		APP_APPENDER_MAP.get(app).error(LOG_LAYOUT.format(event));
+		APP_MAP.get(app).addLog(event.getTimeStamp(), event);
 	}
 
 	public static synchronized Map<Long, LoggingEvent> getContentMap(String app) {
-		return new LinkedHashMap<Long, LoggingEvent>(APP_CONTENT_MAP.get(app));
+		return APP_MAP.get(app).getContentMap();
 	}
 
 	public static List<String> getAppList() {
-		return new ArrayList<String>(APP_CONTENT_MAP.keySet());
+		return new ArrayList<String>(APP_MAP.keySet());
 	}
 
 	public static LogContent getLogContent(String app, long fromIndex, String endOfLine, String logMessageFilter) {
-		if (!APP_CONTENT_MAP.containsKey(app)) {
-			return new LogContent("", 0);
+		if (!APP_MAP.containsKey(app)) {
+			return null;
 		}
 
 		Map<Long, LoggingEvent> amp = getContentMap(app);
@@ -82,4 +59,21 @@ public class LogCacheService {
 		return new LogContent(builder.toString(), lastIndex);
 	}
 
+	private static org.apache.log4j.Logger createLoggerForApp(String app) {
+		try {
+			DailyRollingFileAppender appender = new DailyRollingFileAppender(new PatternLayout("%m"),
+				String.format("logs/web4log/%s.log", app), ".yyyy-MM-dd");
+			appender.setThreshold(Level.ALL);
+			appender.setName("APP_" + app);
+			appender.setAppend(true);
+			appender.activateOptions();
+
+			org.apache.log4j.Logger logger = LogManager.getLogger("APP_" + app);
+			logger.addAppender(appender);
+			logger.setAdditivity(false);
+			return logger;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }
