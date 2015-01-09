@@ -18,7 +18,7 @@ public class LogGenerator {
 								throw new RuntimeException("OOPS!");
 							}
 						} catch (RuntimeException e) {
-							logger.warn("warn: " + i, e);
+							logger.error("Error: " + i, e);
 						}
 						try {
 							Thread.sleep(finalA * 200);

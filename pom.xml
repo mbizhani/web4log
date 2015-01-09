@@ -36,8 +36,8 @@
 	</scm>
 
 	<properties>
-		<wicket.version>6.17.0</wicket.version>
-		<jetty.version>7.6.13.v20130916</jetty.version>
+		<wicket.version>6.18.0</wicket.version>
+		<jetty.version>8.1.16.v20140903</jetty.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
@@ -52,6 +52,12 @@
 			<groupId>org.apache.wicket</groupId>
 			<artifactId>wicket-extensions</artifactId>
 			<version>${wicket.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.wicket</groupId>
+			<artifactId>wicket-atmosphere</artifactId>
+			<version>0.18</version>
 		</dependency>
 
 		<dependency>
@@ -145,5 +151,12 @@
 
 		</plugins>
 	</build>
+
+	<distributionManagement>
+		<repository>
+			<id>bintray</id>
+			<url>https://api.bintray.com/maven/mbizhani/release/web4log</url>
+		</repository>
+	</distributionManagement>
 
 </project>

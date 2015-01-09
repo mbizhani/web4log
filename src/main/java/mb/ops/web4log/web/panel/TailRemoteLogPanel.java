@@ -2,24 +2,21 @@ package mb.ops.web4log.web.panel;
 
 import mb.ops.web4log.service.ConfigService;
 import mb.ops.web4log.service.LogCacheService;
-import mb.ops.web4log.service.LogContent;
-import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
+import org.apache.log4j.spi.LoggingEvent;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.atmosphere.Subscribe;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.util.time.Duration;
 
 public class TailRemoteLogPanel extends Panel {
 	private static final int VIEW_MAX_LINES = ConfigService.getInt("log.view.max.lines");
-	private static final int REFRESH_PERIOD = ConfigService.getInt("log.refresh.period");
 
 	private String remoteApp, logMessageFilter;
-	private long lastLine = 0;
 
 	private TextArea<String> logArea;
 	private TextField<String> filter;
@@ -64,30 +61,35 @@ public class TailRemoteLogPanel extends Panel {
 		});
 		add(form);
 
-		logArea = new TextArea<String>("logArea");
+		Model<String> model = null;
+		if (remoteApp != null) {
+			String logContent = LogCacheService.getLogContent(remoteApp, "\n");
+			model = new Model<String>(logContent);
+		}
+		logArea = new TextArea<String>("logArea", model);
 		logArea.setOutputMarkupId(true);
 		add(logArea);
-
-		add(new AbstractAjaxTimerBehavior(Duration.milliseconds(REFRESH_PERIOD)) {
-			@Override
-			protected void onTimer(AjaxRequestTarget target) {
-				LogContent logContent = LogCacheService.getLogContent(remoteApp, lastLine, "\\n", logMessageFilter);
-				if (logContent != null) {
-					target.appendJavaScript(String.format("scroll('%s', '%s', %s, true);", logArea.getMarkupId(), logContent.getContent(), VIEW_MAX_LINES));
-					lastLine = logContent.getLastIndex();
-				}
-			}
-		});
 
 		add(new AjaxLink("reload") {
 			@Override
 			public void onClick(AjaxRequestTarget target) {
-				LogContent logContent = LogCacheService.getLogContent(remoteApp, 0, "\\n", logMessageFilter);
+				String logContent = LogCacheService.getLogContent(remoteApp, "\\n", logMessageFilter);
 				if (logContent != null) {
-					target.appendJavaScript(String.format("scroll('%s', '%s', %s, false);", logArea.getMarkupId(), logContent.getContent(), VIEW_MAX_LINES));
-					lastLine = logContent.getLastIndex();
+					target.appendJavaScript(String.format("scroll('%s', '%s', %s, false);", logArea.getMarkupId(),
+							logContent, VIEW_MAX_LINES));
 				}
 			}
 		});
+	}
+
+	@Subscribe
+	public void appendLoggingEvent(AjaxRequestTarget target, LoggingEvent le) {
+		if (remoteApp.equals(LogCacheService.getApplicationOfLoggingEvent(le))) {
+			String message = LogCacheService.getMessageOfLoggingEvent(le, "\\n");
+			if (logMessageFilter == null || message.contains(logMessageFilter)) {
+				target.appendJavaScript(String.format("scroll('%s', '%s', %s, true);", logArea.getMarkupId(),
+						message + LogCacheService.getThrowableOfLoggingEvent(le, "\\n"), VIEW_MAX_LINES));
+			}
+		}
 	}
 }

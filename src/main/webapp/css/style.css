@@ -52,6 +52,11 @@ textarea {
 	text-decoration: none;
 }
 
+.app {
+	border: 1px solid #ffffff;
+	padding: 0 5px 0 5px;
+}
+
 .container {
 	padding: 10px;
 }

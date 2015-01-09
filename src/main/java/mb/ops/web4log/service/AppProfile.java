@@ -1,5 +1,6 @@
 package mb.ops.web4log.service;
 
+import org.apache.log4j.FileAppender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
@@ -32,6 +33,10 @@ public class AppProfile {
 
 	public Logger getLogger() {
 		return logger;
+	}
+
+	public String getLogFile() {
+		return ((FileAppender) getLogger().getAppender("APP_" + app)).getFile();
 	}
 
 	public void addLog(Long timestamp, LoggingEvent event) {

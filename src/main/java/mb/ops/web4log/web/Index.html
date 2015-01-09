@@ -4,26 +4,34 @@
 	<meta charset="utf-8"/>
 	<link rel="stylesheet" type="text/css" href="css/style.css"/>
 	<link rel="stylesheet" type="text/css" href="css/font-awesome.min.css"/>
-	<title>Web4Log</title>
+	<title wicket:id="title">Web4Log</title>
 </head>
 <body>
 <table class="header">
 	<tr>
-		<td style="width:14px;"><a wicket:id="reloadAppList"><i class="fa fa-refresh"></i></a></td>
-		<td style="width:100px;">Applications:</td>
+		<td style="width:80px;">Applications:</td>
 		<td>
 			<table>
 				<tr wicket:id="appListContainer">
 					<td wicket:id="appList">
-						<a wicket:id="appLink">
-							<span wicket:id="appLinkLabel"></span>
-						</a>
-						<span class="selectedApp" wicket:id="selectedApp"></span>
+						<table class="app">
+							<tr>
+								<td><i style="color: #8aff27" wicket:id="stat"></i></td>
+								<td>
+									<a wicket:id="appLink">
+										<span wicket:id="appLinkLabel"></span>
+									</a>
+									<span class="selectedApp" wicket:id="selectedApp"></span>
+								</td>
+								<td><a wicket:id="downloadLogFile" target="_blank"><i class="fa fa-download"></i></a>
+								</td>
+							</tr>
+						</table>
 					</td>
 				</tr>
 			</table>
 		</td>
-		<td class="titleCell">Web4Log <i class="fa fa-github"></i></td>
+		<td class="titleCell">Web4Log <i class="fa fa-eye"></i></td>
 	</tr>
 </table>
 

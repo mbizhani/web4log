@@ -1,6 +1,9 @@
 package mb.ops.web4log.web;
 
 import mb.ops.web4log.service.Log4jSocketServer;
+import mb.ops.web4log.service.LogCacheService;
+import org.apache.wicket.atmosphere.EventBus;
+import org.apache.wicket.atmosphere.config.AtmosphereLogLevel;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.protocol.http.WebApplication;
 import org.slf4j.Logger;
@@ -25,6 +28,10 @@ public class Web4LogApplication extends WebApplication {
 		getMarkupSettings().setStripComments(true);
 		getMarkupSettings().setCompressWhitespace(true);
 		getMarkupSettings().setDefaultMarkupEncoding("UTF-8");
+
+		EventBus eventBus = new EventBus(this);
+		eventBus.getParameters().setLogLevel(AtmosphereLogLevel.INFO);
+		LogCacheService.setEventBus(eventBus);
 
 		Log4jSocketServer.start();
 
