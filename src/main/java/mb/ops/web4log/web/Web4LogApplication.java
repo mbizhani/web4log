@@ -1,7 +1,7 @@
 package mb.ops.web4log.web;
 
 import mb.ops.web4log.service.Log4jSocketServer;
-import mb.ops.web4log.service.LogCacheService;
+import mb.ops.web4log.service.LogService;
 import org.apache.wicket.atmosphere.EventBus;
 import org.apache.wicket.atmosphere.config.AtmosphereLogLevel;
 import org.apache.wicket.markup.html.WebPage;
@@ -31,7 +31,7 @@ public class Web4LogApplication extends WebApplication {
 
 		EventBus eventBus = new EventBus(this);
 		eventBus.getParameters().setLogLevel(AtmosphereLogLevel.INFO);
-		LogCacheService.setEventBus(eventBus);
+		LogService.setEventBus(eventBus);
 
 		Log4jSocketServer.start();
 

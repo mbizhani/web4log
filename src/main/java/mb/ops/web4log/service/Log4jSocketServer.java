@@ -70,17 +70,17 @@ public class Log4jSocketServer {
 				ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
 				while (socket.isConnected()) {
 					LoggingEvent le = (LoggingEvent) ois.readObject();
-					String app = LogCacheService.getApplicationOfLoggingEvent(le);
+					String app = LogService.getApplicationOfLoggingEvent(le);
 					if (app == null) {
 						throw new RuntimeException("Invalid LoggingEvent: No Application Name!");
 					}
 
 					if (application == null) {
 						application = app;
-						LogCacheService.appConnected(application);
+						LogService.appConnected(application);
 						logger.info("Application Connected: {}", application);
 					}
-					LogCacheService.addLog(application, le);
+					LogService.addLog(application, le);
 				}
 			} catch (Exception e) {
 				logger.warn("ClientHandler", e);
@@ -93,7 +93,7 @@ public class Log4jSocketServer {
 			}
 
 			logger.info("Application Disconnected: {}", application);
-			LogCacheService.appDisconnected(application);
+			LogService.appDisconnected(application);
 		}
 	}
 }

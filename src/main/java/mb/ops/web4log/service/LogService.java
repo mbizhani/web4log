@@ -10,7 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LogCacheService {
+public class LogService {
 	private static final Layout LOG_LAYOUT = new PatternLayout(ConfigService.getString("log.layout"));
 	private static final Map<String, AppProfile> APP_MAP = new LinkedHashMap<String, AppProfile>();
 	private static final List<AppInfo> APP_INFO_LIST = new ArrayList<AppInfo>();
@@ -18,7 +18,7 @@ public class LogCacheService {
 	private static EventBus eventBus;
 
 	public static void setEventBus(EventBus eventBus) {
-		LogCacheService.eventBus = eventBus;
+		LogService.eventBus = eventBus;
 	}
 
 	public static void appConnected(String app) {
@@ -51,12 +51,12 @@ public class LogCacheService {
 		}
 	}
 
-	public static synchronized void addLog(String app, LoggingEvent event) {
-		APP_MAP.get(app).addLog(event.getTimeStamp(), event);
+	public static synchronized void addLog(String app, LoggingEvent le) {
+		APP_MAP.get(app).addLog(le, getMessageOfLoggingEvent(le, "\n") + getThrowableOfLoggingEvent(le, "\n"));
 
-		eventBus.post(event);
+		eventBus.post(le);
 
-		if (Level.ERROR.equals(event.getLevel())) {
+		if (Level.ERROR.equals(le.getLevel())) {
 			eventBus.post(new AppEvent(app, EAppEvent.ERROR));
 		}
 	}
@@ -97,8 +97,8 @@ public class LogCacheService {
 
 	public static String getMessageOfLoggingEvent(LoggingEvent le, String endOfLine) {
 		return LOG_LAYOUT.format(le)
-				.replace("\r", "")
-				.replace("\n", endOfLine);
+			.replace("\r", "")
+			.replace("\n", endOfLine);
 	}
 
 	public static String getThrowableOfLoggingEvent(LoggingEvent le, String endOfLine) {
@@ -125,7 +125,7 @@ public class LogCacheService {
 	private static org.apache.log4j.Logger createLoggerForApp(String app) {
 		try {
 			DailyRollingFileAppender appender = new DailyRollingFileAppender(new PatternLayout("%m"),
-					String.format("logs/web4log/%s.log", app), ".yyyy-MM-dd");
+				String.format("logs/web4log/%s.log", app), ".yyyy-MM-dd");
 			appender.setThreshold(Level.ALL);
 			appender.setName("APP_" + app);
 			appender.setAppend(true);

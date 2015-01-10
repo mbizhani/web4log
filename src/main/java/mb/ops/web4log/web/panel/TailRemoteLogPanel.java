@@ -1,7 +1,7 @@
 package mb.ops.web4log.web.panel;
 
 import mb.ops.web4log.service.ConfigService;
-import mb.ops.web4log.service.LogCacheService;
+import mb.ops.web4log.service.LogService;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -63,7 +63,7 @@ public class TailRemoteLogPanel extends Panel {
 
 		Model<String> model = null;
 		if (remoteApp != null) {
-			String logContent = LogCacheService.getLogContent(remoteApp, "\n");
+			String logContent = LogService.getLogContent(remoteApp, "\n");
 			model = new Model<String>(logContent);
 		}
 		logArea = new TextArea<String>("logArea", model);
@@ -73,10 +73,10 @@ public class TailRemoteLogPanel extends Panel {
 		add(new AjaxLink("reload") {
 			@Override
 			public void onClick(AjaxRequestTarget target) {
-				String logContent = LogCacheService.getLogContent(remoteApp, "\\n", logMessageFilter);
+				String logContent = LogService.getLogContent(remoteApp, "\\n", logMessageFilter);
 				if (logContent != null) {
 					target.appendJavaScript(String.format("scroll('%s', '%s', %s, false);", logArea.getMarkupId(),
-							logContent, VIEW_MAX_LINES));
+						logContent, VIEW_MAX_LINES));
 				}
 			}
 		});
@@ -84,11 +84,11 @@ public class TailRemoteLogPanel extends Panel {
 
 	@Subscribe
 	public void appendLoggingEvent(AjaxRequestTarget target, LoggingEvent le) {
-		if (remoteApp.equals(LogCacheService.getApplicationOfLoggingEvent(le))) {
-			String message = LogCacheService.getMessageOfLoggingEvent(le, "\\n");
+		if (remoteApp.equals(LogService.getApplicationOfLoggingEvent(le))) {
+			String message = LogService.getMessageOfLoggingEvent(le, "\\n");
 			if (logMessageFilter == null || message.contains(logMessageFilter)) {
 				target.appendJavaScript(String.format("scroll('%s', '%s', %s, true);", logArea.getMarkupId(),
-						message + LogCacheService.getThrowableOfLoggingEvent(le, "\\n"), VIEW_MAX_LINES));
+					message + LogService.getThrowableOfLoggingEvent(le, "\\n"), VIEW_MAX_LINES));
 			}
 		}
 	}
