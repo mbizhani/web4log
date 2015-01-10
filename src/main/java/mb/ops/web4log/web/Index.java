@@ -2,7 +2,8 @@ package mb.ops.web4log.web;
 
 import mb.ops.web4log.service.AppEvent;
 import mb.ops.web4log.service.AppInfo;
-import mb.ops.web4log.service.LogCacheService;
+import mb.ops.web4log.service.ConfigService;
+import mb.ops.web4log.service.LogService;
 import mb.ops.web4log.web.panel.TailRemoteLogPanel;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -27,15 +28,16 @@ public class Index extends WebPage {
 	}
 
 	public Index(String app) {
-		final String theApp = LogCacheService.isAppRegistered(app) ? app : null;
+		final String theApp = LogService.isAppRegistered(app) ? app : null;
 
 		add(new Label("title", theApp != null ? String.format("[%s]@Web4Log", theApp) : "Web4Log"));
+		add(new Label("headerLabel", ConfigService.getString("header.label")));
 
 		appListContainer = new WebMarkupContainer("appListContainer");
 		appListContainer.setOutputMarkupId(true);
 		add(appListContainer);
 
-		appListContainer.add(new ListView<AppInfo>("appList", LogCacheService.getAppList()) {
+		appListContainer.add(new ListView<AppInfo>("appList", LogService.getAppList()) {
 			@Override
 			protected void populateItem(final ListItem<AppInfo> item) {
 				final AppInfo anAppInfo = item.getModelObject();
@@ -58,14 +60,14 @@ public class Index extends WebPage {
 				item.add(stat);
 				item.add(selectedAppLbl);
 				item.add(appLink);
-				item.add(new DownloadLink("downloadLogFile", new File(LogCacheService.getLogFileLocation(anAppInfo.getName()))));
+				item.add(new DownloadLink("downloadLogFile", new File(LogService.getLogFileLocation(anAppInfo.getName()))));
 			}
 		});
 
 		add(
-				new TailRemoteLogPanel("tailPanel")
-						.setRemoteApp(theApp)
-						.setVisible(theApp != null)
+			new TailRemoteLogPanel("tailPanel")
+				.setRemoteApp(theApp)
+				.setVisible(theApp != null)
 		);
 	}
 
