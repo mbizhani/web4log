@@ -2,23 +2,42 @@ package mb.ops.web4log.service;
 
 import org.apache.log4j.*;
 import org.apache.log4j.spi.LoggingEvent;
-import org.apache.wicket.atmosphere.EventBus;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 public class LogService {
 	private static final Layout LOG_LAYOUT = new PatternLayout(ConfigService.getString("log.layout"));
 	private static final Map<String, AppProfile> APP_MAP = new LinkedHashMap<String, AppProfile>();
 	private static final List<AppInfo> APP_INFO_LIST = new ArrayList<AppInfo>();
 
-	private static EventBus eventBus;
+	private static IEventListener eventListener;
+	private static ScheduledExecutorService scheduler;
 
-	public static void setEventBus(EventBus eventBus) {
-		LogService.eventBus = eventBus;
+	public static void start(IEventListener eventListener) {
+		LogService.eventListener = eventListener;
+
+		startDateDispatcher();
+
+		Log4jSocketServer.start();
+	}
+
+	public static void stop() {
+		Log4jSocketServer.stop();
+		scheduler.shutdown();
+	}
+
+	public static void dispatchEvent(Object event) {
+		if (eventListener != null) {
+			eventListener.handleEvent(event);
+		} else {
+			throw new RuntimeException("No IEventListener!");
+		}
 	}
 
 	public static void appConnected(String app) {
@@ -26,7 +45,7 @@ public class LogService {
 			if (!APP_MAP.containsKey(app)) {
 				APP_MAP.put(app, new AppProfile(app, createLoggerForApp(app)));
 				APP_INFO_LIST.add(new AppInfo(app));
-				eventBus.post(new AppEvent(app, EAppEvent.CONNECTED));
+				dispatchEvent(new AppEvent(app, EAppEvent.CONNECTED));
 			} else {
 				for (AppInfo appInfo : APP_INFO_LIST) {
 					if (appInfo.getName().equals(app)) {
@@ -34,7 +53,7 @@ public class LogService {
 						break;
 					}
 				}
-				eventBus.post(new AppEvent(app, EAppEvent.RE_CONNECTED));
+				dispatchEvent(new AppEvent(app, EAppEvent.RECONNECTED));
 			}
 		}
 	}
@@ -47,17 +66,17 @@ public class LogService {
 					break;
 				}
 			}
-			eventBus.post(new AppEvent(app, EAppEvent.DISCONNECTED));
+			dispatchEvent(new AppEvent(app, EAppEvent.DISCONNECTED));
 		}
 	}
 
 	public static synchronized void addLog(String app, LoggingEvent le) {
 		APP_MAP.get(app).addLog(le, getMessageOfLoggingEvent(le, "\n") + getThrowableOfLoggingEvent(le, "\n"));
 
-		eventBus.post(le);
+		dispatchEvent(le);
 
 		if (Level.ERROR.equals(le.getLevel())) {
-			eventBus.post(new AppEvent(app, EAppEvent.ERROR));
+			dispatchEvent(new AppEvent(app, EAppEvent.ERROR));
 		}
 	}
 
@@ -122,6 +141,11 @@ public class LogService {
 		return APP_MAP.get(app).getLogFile();
 	}
 
+	public static String getFormattedDate(Date date) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+		return sdf.format(date);
+	}
+
 	private static org.apache.log4j.Logger createLoggerForApp(String app) {
 		try {
 			DailyRollingFileAppender appender = new DailyRollingFileAppender(new PatternLayout("%m"),
@@ -138,5 +162,24 @@ public class LogService {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private static void startDateDispatcher() {
+		scheduler = Executors.newScheduledThreadPool(1, new ThreadFactory() {
+			@Override
+			public Thread newThread(Runnable r) {
+				Thread ret = new Thread(r);
+				ret.setDaemon(true);
+				return ret;
+			}
+		});
+		final Runnable beeper = new Runnable() {
+			@Override
+			public void run() {
+				dispatchEvent(new Date());
+			}
+		};
+		int currSeconds = Calendar.getInstance().get(Calendar.SECOND);
+		scheduler.scheduleWithFixedDelay(beeper, 60 - currSeconds, 60, TimeUnit.SECONDS);
 	}
 }

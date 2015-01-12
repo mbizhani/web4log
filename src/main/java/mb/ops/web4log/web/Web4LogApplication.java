@@ -1,6 +1,6 @@
 package mb.ops.web4log.web;
 
-import mb.ops.web4log.service.Log4jSocketServer;
+import mb.ops.web4log.service.IEventListener;
 import mb.ops.web4log.service.LogService;
 import org.apache.wicket.atmosphere.EventBus;
 import org.apache.wicket.atmosphere.config.AtmosphereLogLevel;
@@ -9,9 +9,10 @@ import org.apache.wicket.protocol.http.WebApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-public class Web4LogApplication extends WebApplication {
+public class Web4LogApplication extends WebApplication implements IEventListener {
 	private static final Logger logger = LoggerFactory.getLogger(Web4LogApplication.class);
+
+	private EventBus eventBus;
 
 	@Override
 	public Class<? extends WebPage> getHomePage() {
@@ -29,17 +30,21 @@ public class Web4LogApplication extends WebApplication {
 		getMarkupSettings().setCompressWhitespace(true);
 		getMarkupSettings().setDefaultMarkupEncoding("UTF-8");
 
-		EventBus eventBus = new EventBus(this);
+		eventBus = new EventBus(this);
 		eventBus.getParameters().setLogLevel(AtmosphereLogLevel.INFO);
-		LogService.setEventBus(eventBus);
 
-		Log4jSocketServer.start();
+		LogService.start(this);
 
 		logger.info("Web4LogApplication Inited");
 	}
 
 	@Override
+	public void handleEvent(Object event) {
+		eventBus.post(event);
+	}
+
+	@Override
 	protected void onDestroy() {
-		Log4jSocketServer.stop();
+		LogService.stop();
 	}
 }

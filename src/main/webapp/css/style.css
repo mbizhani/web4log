@@ -66,5 +66,11 @@ textarea {
 
 .container {
 	padding: 10px;
-	height: 90%;
+	height: 85%;
+}
+
+.serverDate {
+	text-align: center;
+	font-size: 12px;
+	background-color: #8aff27;
 }

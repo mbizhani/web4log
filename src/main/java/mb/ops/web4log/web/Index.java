@@ -16,22 +16,32 @@ import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.util.time.Duration;
 
 import java.io.File;
+import java.io.Serializable;
+import java.util.Date;
 
 public class Index extends WebPage {
 	private WebMarkupContainer appListContainer;
+	private Label serverDate;
 
 	public Index(PageParameters parameters) {
 		this(parameters.get("app").toOptionalString());
 	}
 
 	public Index(String app) {
+		setVersioned(false);
 		final String theApp = LogService.isAppRegistered(app) ? app : null;
+
+		serverDate = new Label("serverDate", LogService.getFormattedDate(new Date()));
+		serverDate.setOutputMarkupId(true);
 
 		add(new Label("title", theApp != null ? String.format("[%s]@Web4Log", theApp) : "Web4Log"));
 		add(new Label("headerLabel", ConfigService.getString("header.label")));
+		add(serverDate);
 
 		appListContainer = new WebMarkupContainer("appListContainer");
 		appListContainer.setOutputMarkupId(true);
@@ -60,7 +70,8 @@ public class Index extends WebPage {
 				item.add(stat);
 				item.add(selectedAppLbl);
 				item.add(appLink);
-				item.add(new DownloadLink("downloadLogFile", new File(LogService.getLogFileLocation(anAppInfo.getName()))));
+				item.add(new DownloadLink("downloadLogFile", new File(LogService.getLogFileLocation(anAppInfo.getName())))
+					.setCacheDuration(Duration.NONE));
 			}
 		});
 
@@ -72,25 +83,14 @@ public class Index extends WebPage {
 	}
 
 	@Subscribe
+	public void watchDateEvent(AjaxRequestTarget target, Date date) {
+		serverDate.setDefaultModel(new Model<Serializable>(LogService.getFormattedDate(date)));
+		target.add(serverDate);
+	}
+
+	@Subscribe
 	public void watchAppEvent(AjaxRequestTarget target, AppEvent event) {
 		target.add(appListContainer);
-
-		switch (event.getEventType()) {
-			case CONNECTED:
-				target.appendJavaScript(String.format("alert('[%s] CONNECTED');", event.getApp()));
-				break;
-
-			case DISCONNECTED:
-				target.appendJavaScript(String.format("alert('[%s] DIS-CONNECTED!!!');", event.getApp()));
-				break;
-
-			case RE_CONNECTED:
-				target.appendJavaScript(String.format("alert('[%s] RE-CONNECTED!');", event.getApp()));
-				break;
-
-			case ERROR:
-				target.appendJavaScript(String.format("alert('[%s] ERROR!!!');", event.getApp()));
-				break;
-		}
+		target.appendJavaScript(String.format("alert('App=[%s] %s');", event.getApp(), event.getEventType()));
 	}
 }
