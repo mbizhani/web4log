@@ -43,5 +43,13 @@
 
 <div class="container" wicket:id="tailPanel"></div>
 
+<script type="text/javascript">
+	<![CDATA[
+	Wicket.Event.subscribe('/ajax/call/failure', function (jqEvent, attributes, jqXHR, errorThrown, textStatus) {
+		alert('Ajax Failure');
+	});
+	]]>
+</script>
+
 </body>
 </html>

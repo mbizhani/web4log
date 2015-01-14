@@ -6,6 +6,7 @@ import mb.ops.web4log.service.ConfigService;
 import mb.ops.web4log.service.LogService;
 import mb.ops.web4log.web.panel.TailRemoteLogPanel;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.atmosphere.Subscribe;
 import org.apache.wicket.markup.html.WebComponent;
@@ -80,13 +81,21 @@ public class Index extends WebPage {
 				.setRemoteApp(theApp)
 				.setVisible(theApp != null)
 		);
+
+		add(new AbstractAjaxTimerBehavior(Duration.ONE_MINUTE) {
+			@Override
+			protected void onTimer(AjaxRequestTarget target) {
+				serverDate.setDefaultModel(new Model<Serializable>(LogService.getFormattedDate(new Date())));
+				target.add(serverDate);
+			}
+		});
 	}
 
-	@Subscribe
+	/*@Subscribe
 	public void watchDateEvent(AjaxRequestTarget target, Date date) {
 		serverDate.setDefaultModel(new Model<Serializable>(LogService.getFormattedDate(date)));
 		target.add(serverDate);
-	}
+	}*/
 
 	@Subscribe
 	public void watchAppEvent(AjaxRequestTarget target, AppEvent event) {

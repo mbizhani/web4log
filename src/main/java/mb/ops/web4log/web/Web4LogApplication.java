@@ -4,6 +4,7 @@ import mb.ops.web4log.service.IEventListener;
 import mb.ops.web4log.service.LogService;
 import org.apache.wicket.atmosphere.EventBus;
 import org.apache.wicket.atmosphere.config.AtmosphereLogLevel;
+import org.apache.wicket.atmosphere.config.AtmosphereParameters;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.protocol.http.WebApplication;
 import org.slf4j.Logger;
@@ -31,7 +32,11 @@ public class Web4LogApplication extends WebApplication implements IEventListener
 		getMarkupSettings().setDefaultMarkupEncoding("UTF-8");
 
 		eventBus = new EventBus(this);
-		eventBus.getParameters().setLogLevel(AtmosphereLogLevel.INFO);
+		AtmosphereParameters parameters = eventBus.getParameters();
+		parameters.setLogLevel(AtmosphereLogLevel.INFO);
+		parameters.setTimeout(-1);
+		parameters.setReconnectInterval(60000);
+		parameters.setMaxReconnectOnClose(1000);
 
 		LogService.start(this);
 
