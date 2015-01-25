@@ -22,14 +22,17 @@ public class LogService {
 	public static void start(IEventListener eventListener) {
 		LogService.eventListener = eventListener;
 
-		startDateDispatcher();
+		//startDateDispatcher();
 
 		Log4jSocketServer.start();
 	}
 
 	public static void stop() {
 		Log4jSocketServer.stop();
-		scheduler.shutdown();
+
+		if (scheduler != null) {
+			scheduler.shutdown();
+		}
 	}
 
 	public static void dispatchEvent(Object event) {

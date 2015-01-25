@@ -9,9 +9,17 @@ import java.io.ObjectInputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Log4jSocketServer {
 	private static final Logger logger = LoggerFactory.getLogger(Log4jSocketServer.class);
+
+	private static final AtomicInteger CLIENT_COUNTER = new AtomicInteger(0);
+	private static final AtomicBoolean ACCEPTING = new AtomicBoolean(true);
+	private static final Map<Integer, ClientHandler> CLIENT_HANDLER_MAP = new ConcurrentHashMap<Integer, ClientHandler>();
 
 	private static ServerSocket serverSocket;
 
@@ -28,10 +36,23 @@ public class Log4jSocketServer {
 			new Thread() {
 				@Override
 				public void run() {
+					setName("Web4Log:ServerSocket:Acceptor");
+
 					try {
-						while (true) {
+						while (ACCEPTING.get()) {
 							Socket socket = serverSocket.accept();
-							new Thread(new ClientHandler(socket)).start();
+							if (ACCEPTING.get()) {
+								int clientNo = CLIENT_COUNTER.getAndIncrement();
+								ClientHandler clientHandler = new ClientHandler(socket, clientNo);
+								CLIENT_HANDLER_MAP.put(clientNo, clientHandler);
+								new Thread(clientHandler).start();
+							} else {
+								try {
+									socket.close();
+								} catch (IOException e) {
+									logger.warn("ServerSocket ACCEPTING: {}", ACCEPTING.get());
+								}
+							}
 						}
 					} catch (IOException e) {
 						logger.error("Waiting for connections: ", e);
@@ -46,25 +67,42 @@ public class Log4jSocketServer {
 	}
 
 	public static void stop() {
-		try {
-			if (serverSocket != null)
-				serverSocket.close();
-		} catch (IOException e) {
-			logger.warn("Log4jServer.stop:", e);
+		logger.info("Log4jServer Stopping");
+
+		ACCEPTING.set(false);
+
+		for (ClientHandler clientHandler : CLIENT_HANDLER_MAP.values()) {
+			clientHandler.close();
 		}
+
+		CLIENT_HANDLER_MAP.clear();
+
+		try {
+			if (serverSocket != null) {
+				serverSocket.close();
+			}
+		} catch (IOException e) {
+			logger.warn("Log4jServer.stop(): ", e);
+		}
+
+		logger.info("Log4jServer Stopped");
 	}
 
 	private static class ClientHandler implements Runnable {
-		private Socket socket;
+		private int clientNo;
 		private String application;
+		private Socket socket;
 
-		private ClientHandler(Socket socket) {
+		private ClientHandler(Socket socket, int clientNo) {
 			this.socket = socket;
+			this.clientNo = clientNo;
 		}
 
 		@Override
 		public void run() {
-			logger.info("ClientHandler Start: client={}", socket.getInetAddress());
+			Thread.currentThread().setName(String.format("Web4Log:ClientHandler:%03d", clientNo));
+
+			logger.info("ClientHandler Start: no={}, client={}", clientNo, socket.getInetAddress());
 
 			try {
 				ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
@@ -86,7 +124,9 @@ public class Log4jSocketServer {
 				logger.warn("ClientHandler", e);
 			} finally {
 				try {
-					socket.close();
+					if (!socket.isClosed()) {
+						socket.close();
+					}
 				} catch (IOException e) {
 					logger.warn("Client Socket Closing", e);
 				}
@@ -94,6 +134,18 @@ public class Log4jSocketServer {
 
 			logger.info("Application Disconnected: {}", application);
 			LogService.appDisconnected(application);
+
+			CLIENT_HANDLER_MAP.remove(clientNo);
+		}
+
+		private void close() {
+			try {
+				if (socket != null && !socket.isClosed()) {
+					socket.close();
+				}
+			} catch (IOException e) {
+				logger.warn("Closing ClientHandler Socket: no=" + clientNo, e);
+			}
 		}
 	}
 }
