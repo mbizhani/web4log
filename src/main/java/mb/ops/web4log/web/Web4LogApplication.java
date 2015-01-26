@@ -1,5 +1,6 @@
 package mb.ops.web4log.web;
 
+import mb.ops.web4log.service.ConfigService;
 import mb.ops.web4log.service.IEventListener;
 import mb.ops.web4log.service.LogService;
 import org.apache.wicket.atmosphere.EventBus;
@@ -22,9 +23,13 @@ public class Web4LogApplication extends WebApplication implements IEventListener
 
 	@Override
 	public void init() {
+		logger.info("********************");
+		logger.info("* Starting Web4Log *");
+		logger.info("********************");
+
 		super.init();
 
-		logger.info("Start Web4LogApplication");
+		ConfigService.start();
 
 		getMarkupSettings().setStripWicketTags(true);
 		getMarkupSettings().setStripComments(true);
@@ -34,9 +39,21 @@ public class Web4LogApplication extends WebApplication implements IEventListener
 		eventBus = new EventBus(this);
 		AtmosphereParameters parameters = eventBus.getParameters();
 		parameters.setLogLevel(AtmosphereLogLevel.INFO);
-		parameters.setTimeout(-1);
-		parameters.setReconnectInterval(60000);
-		parameters.setMaxReconnectOnClose(1000);
+
+		String timeout = ConfigService.getString("atmosphere.timeout");
+		if (timeout != null) {
+			parameters.setTimeout(Integer.parseInt(timeout));
+		}
+
+		String reconnectInterval = ConfigService.getString("atmosphere.reconnect.interval");
+		if (reconnectInterval != null) {
+			parameters.setReconnectInterval(Integer.parseInt(reconnectInterval));
+		}
+
+		String maxReconnectOnClose = ConfigService.getString("atmosphere.max.reconnect.on.close");
+		if (maxReconnectOnClose != null) {
+			parameters.setReconnectInterval(Integer.parseInt(maxReconnectOnClose));
+		}
 
 		LogService.start(this);
 

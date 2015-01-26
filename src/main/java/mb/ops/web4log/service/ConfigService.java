@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 public abstract class ConfigService {
@@ -11,11 +12,14 @@ public abstract class ConfigService {
 
 	private static final Properties PROPERTIES = new Properties();
 
-	static {
+	public static void start() {
 		try {
-			PROPERTIES.load(ConfigService.class.getResourceAsStream("/config.properties"));
+			InputStream resourceAsStream = ConfigService.class.getResourceAsStream("/config.properties");
+			PROPERTIES.load(resourceAsStream);
+			resourceAsStream.close();
 		} catch (IOException e) {
-			logger.error("ConfigService INIT: ", e);
+			logger.error("ConfigService Start: ", e);
+			throw new RuntimeException(e);
 		}
 	}
 
