@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 
 public abstract class ConfigService {
@@ -14,9 +13,7 @@ public abstract class ConfigService {
 
 	public static void start() {
 		try {
-			InputStream resourceAsStream = ConfigService.class.getResourceAsStream("/config.properties");
-			PROPERTIES.load(resourceAsStream);
-			resourceAsStream.close();
+			PROPERTIES.load(ConfigService.class.getResourceAsStream("/config.properties"));
 		} catch (IOException e) {
 			logger.error("ConfigService Start: ", e);
 			throw new RuntimeException(e);
